@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Stickman Hook - Physics Swing & Launch</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;900&family=Fredoka+One&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-container">
+    <!-- Main Game Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top Progress Bar & HUD -->
+    <header id="hud">
+      <div class="hud-left">
+        <button id="btn-levels" class="hud-btn" title="Level Select">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+          <span class="btn-text">Levels</span>
+        </button>
+        <button id="btn-skins" class="hud-btn" title="Skins">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+          <span class="btn-text">Skins</span>
+        </button>
+      </div>
+
+      <!-- Level Progress Bar in Center -->
+      <div id="progress-container">
+        <div id="level-title-display">Level 1</div>
+        <div class="progress-bar-track">
+          <div id="progress-fill"></div>
+          <div id="progress-stickman-icon">🤸</div>
+          <div id="progress-flag-icon">🏁</div>
+        </div>
+      </div>
+
+      <div class="hud-right">
+        <button id="btn-sound" class="hud-btn" title="Toggle Sound">
+          <span id="sound-icon">🔊</span>
+        </button>
+        <button id="btn-pause" class="hud-btn" title="Pause (P / Esc)">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path fill="currentColor" d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+        </button>
+        <button id="btn-restart" class="hud-btn" title="Restart (R)">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Endless Mode Distance Meter (hidden in regular levels) -->
+    <div id="endless-hud" class="hidden">
+      <div class="endless-score">
+        <span class="score-label">DISTANCE</span>
+        <span id="endless-distance">0m</span>
+      </div>
+      <div class="endless-best">
+        <span class="score-label">BEST</span>
+        <span id="endless-best-distance">0m</span>
+      </div>
+    </div>
+
+    <!-- On-screen Interactive Tutorial / Hint -->
+    <div id="tutorial-overlay" class="tutorial-overlay">
+      <div class="tutorial-box">
+        <div class="tap-hand-animation">👆</div>
+        <p class="tutorial-text" id="tutorial-text">
+          <span class="highlight">PRESS & HOLD</span> to Hook & Swing<br>
+          <span class="highlight">RELEASE</span> to Fly!
+        </p>
+      </div>
+    </div>
+
+    <!-- Floating Combo / Speed Notification -->
+    <div id="combo-popup" class="combo-popup"></div>
+
+    <!-- Modal: Level Select -->
+    <div id="modal-levels" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Select Level</h2>
+          <button class="modal-close" id="btn-close-levels">&times;</button>
+        </div>
+        <div class="levels-tabs">
+          <button class="tab-btn active" id="tab-campaign">Campaign</button>
+          <button class="tab-btn" id="tab-endless">Endless Mode</button>
+        </div>
+        <div class="levels-grid" id="levels-grid">
+          <!-- Dynamically populated via JS -->
+        </div>
+        <div id="endless-select-card" class="endless-card hidden">
+          <div class="endless-icon">⚡♾️</div>
+          <h3>Infinite Swing</h3>
+          <p>Test your swinging skills in an endless procedural challenge! How far can you go?</p>
+          <button id="btn-start-endless" class="primary-btn">Play Endless Mode</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Skins Selector -->
+    <div id="modal-skins" class="modal-overlay hidden">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Stickman Skins</h2>
+          <button class="modal-close" id="btn-close-skins">&times;</button>
+        </div>
+        <div class="skins-grid" id="skins-grid">
+          <!-- Dynamically populated via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Overlay Screen -->
+    <div id="overlay-victory" class="overlay-screen hidden">
+      <div class="victory-card">
+        <div class="victory-banner">VICTORY!</div>
+        <div class="victory-stars" id="victory-stars">⭐⭐⭐</div>
+        <h3 id="victory-level-name">Level 1 Complete!</h3>
+        <div class="victory-stats">
+          <div class="stat-item">
+            <span class="stat-label">Time</span>
+            <span class="stat-val" id="victory-time">0.0s</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Swings</span>
+            <span class="stat-val" id="victory-swings">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Bounces</span>
+            <span class="stat-val" id="victory-bounces">0</span>
+          </div>
+        </div>
+        <div class="victory-actions">
+          <button id="btn-victory-replay" class="secondary-btn">Replay</button>
+          <button id="btn-victory-next" class="primary-btn pulse-animation">Next Level &rarr;</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="overlay-gameover" class="overlay-screen hidden">
+      <div class="gameover-card">
+        <div class="gameover-banner">CRASHED!</div>
+        <p class="gameover-msg">Watch out for spikes & falls!</p>
+        <button id="btn-retry" class="primary-btn pulse-animation">Try Again (R)</button>
+      </div>
+    </div>
+
+    <!-- Pause Screen Overlay -->
+    <div id="overlay-pause" class="overlay-screen hidden">
+      <div class="pause-card">
+        <div class="pause-banner">PAUSED</div>
+        <p class="pause-subtitle" id="pause-level-info">Level 1: First Leap</p>
+        <div class="pause-actions">
+          <button id="btn-pause-resume" class="primary-btn pulse-animation">
+            <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 6px;"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>Resume Game
+          </button>
+          <button id="btn-pause-restart" class="secondary-btn">
+            <svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 6px;"><path fill="currentColor" d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>Restart
+          </button>
+          <button id="btn-pause-levels" class="secondary-btn">
+            <svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 6px;"><path fill="currentColor" d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Select Level
+          </button>
+        </div>
+        <div class="pause-footer">
+          <span class="pause-tip">Tip: Press <kbd>P</kbd> or <kbd>Esc</kbd> to Pause / Resume</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/stickman.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
